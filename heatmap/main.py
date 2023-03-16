@@ -11,23 +11,31 @@ __version__ = "0.1.0"
 __license__ = "MIT"
 
 
-import argparse
-import pandas as pd
-from heatmap import HeatMapFormat
+from heatmap.heatmap import HeatMapFormat
 from report import Report
+
+import pandas as pd
+
+import argparse
+from pathlib import Path
 
 
 def read_data(input_file):
-    """TODO"""
-    sheets = pd.ExcelFile(input_file)
-    df = pd.read_excel(input_file,
-                        sheet_name=sheets.sheet_names[0],
-                        skiprows=1
-                        )
+    """Import data to dataframe."""
+    if input_file.suffix == '.csv':
+        df = pd.read_csv(input_file)
+    elif input_file.suffix == '.xlsx':
+        sheets = pd.ExcelFile(input_file)
+        df = pd.read_excel(input_file,
+                            sheet_name=sheets.sheet_names[0],
+                            skiprows=1
+                            )
+    else:
+        print('ERRROR')
     return df
 
 def create_excel_report(df, hmformat, writer):
-    """TODO"""
+    """Generate heatmap formatted excel file."""
     df.style.apply(hmformat.highlight_cells,
                             axis=1
                             ).to_excel(writer,
@@ -36,7 +44,7 @@ def create_excel_report(df, hmformat, writer):
                                         )
 
 def create_index_report(output_dir, docs):
-    """TODO"""
+    """Generate d3 html index file from template."""
     template_path = './doc_extract/templates'
     template = 'index.html'
     template_data = {'records': docs}
@@ -50,9 +58,10 @@ def create_index_report(output_dir, docs):
 
 def main(args):
     """ Main entry point of the app """
-    df = read_data(args.input_file)
+    input_file = Path(args.input_file)
+    df = read_data(input_file)
     hmformat = HeatMapFormat()
-    match args.type:
+    match args.output_type:
         case 'xlsx':
             output_file = args.output_dir
             writer = pd.ExcelWriter(args.output_file, engine='xlsxwriter')

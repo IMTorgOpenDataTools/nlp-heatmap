@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Module for Bank Status Heatmap Project.
+Module for Status Heatmap Project.
 """
 
 __author__ = "Jason Beach"
@@ -27,12 +27,11 @@ class HeatMapFormat:
                                     )
     """
 
-    def __init__(self):
-        #, config=None
-        #if config:
-        #    self.config = config
-        pass
+    def __init__(self, config=None):
+        if config:
+            self.config = config
 
+    #config attrs
     output_types = ['xlsx', 'html']
 
     config = {
@@ -43,15 +42,34 @@ class HeatMapFormat:
         'danger' : {'numeric':1.0, 'bg':'##ff2e1b', 'fc':'white'}
     }
 
-    def convert_to_output_type(self, type, val):
-        """..."""
-        if type == 'xlsx':
-            rslt = f"background-color:{self.config[val]['bg']}; color:{self.config[val]['fc']}"
-        elif type == 'html':
-            rslt = self.config[val]['numeric']
+    #support methods
+    def get_status_category_from_numeric(self, numeric):
+        if 0 <= numeric <= 1.0:
+            status_pairs = [(v['numeric'],k) for k,v in self.config.items() if v['numeric']!=None]
+            pair = [p for p in status_pairs if p[0]>=numeric][0]
+            status_category = pair[1]
+        else:
+            print('ERRROR')
+        return status_category
+
+    def convert_to_output_type(self, type, status):
+        """Get the approprite output for the user-provided output_type."""
+        if status['status_category']:
+            val = status['status_category']
+        elif status['status_numeric']:
+            val = self.get_status_category_from_numeric(self, status['status_numeric'])
+        else:
+            print('ERROR')
+        match type:
+            case 'xlsx':
+                rslt = f"background-color:{self.config[val]['bg']}; color:{self.config[val]['fc']}"
+            case 'html':
+                rslt = self.config[val]['numeric']
+            case _:
+                print('ERROR')
         return rslt
 
-
+    #workflow
     def highlight_cells(self, row):
         """This is actually used with `.apply()`
         
@@ -60,30 +78,35 @@ class HeatMapFormat:
         """
         formats = []
         for key,val in zip(row.index, row):
-            match key:
-                case 'Name': tmp = self.col_empty(val)
-                case 'Q1': tmp = self.col_Q1(val)
-                case 'Q2': tmp = self.col_Q1(val)
-                case 'Q3': tmp = self.col_Q1(val)
-            rslt = self.convert_to_output_type(type='xlsx', val=tmp)
+            status = {'status_category':None, 'status_numeric':None}
+            if pd.isna(val):
+                status['status_category'] = 'missing'
+            else:
+                match key:
+                    case 'Name': status['status_category'] = self.col_empty(val)
+                    case 'Q1': status['status_category'] = self.col_Q1(val)
+                    case 'Q2': status['status_category'] = self.col_Q1(val)
+                    case 'Q3': status['status_category'] = self.col_Q1(val)
+            rslt = self.convert_to_output_type(type='xlsx', val=status)
             formats.append(rslt)
         return formats
 
-    def col_empty(self, val):
-        """For empty columns"""
-        if pd.isna(val):
-            return f"background-color:{self.config['missing']['bg']}; color:{self.config['missing']['fc']}"
-        val = str(val).lower()
-        return f"background-color: {self.config['not_applicable']['bg']}; color: {self.config['not_applicable']['fc']}"
+    def col_empty(self, val,):
+        """Defined for empty columns"""
+        status_category = 'not_applicable'
+        return status_category 
 
+    #column mapping definitions
+    """
+    Column mapping requirements, may provide:
+    * 'status_category' <any except missing> for t-shirt size status, or
+    * 'status_numeric' <float between 0.0 and 1.0> for use with d3js template
+
+    """
     def col_Q1(self, val):
-        """TODO"""
-        if pd.isna(val):
-            rslt = 'missing'
+        val = str(val).lower()
+        if 'no' in val:
+            status_category  = 'danger'
         else:
-            val = str(val).lower()
-            if 'no' in val:
-                rslt = 'danger'
-            else:
-                rslt = 'not_applicable'
-        return rslt
+            status_category  = 'not_applicable'
+        return status_category 
