@@ -36,21 +36,24 @@ class HeatMapFormat:
     output_types = ['xlsx', 'html']
 
     config = {
-        'missing' : {'bg':'gray', 'fc':'black'},
-        'not_applicable' : {'bg':'white', 'fc':'black'},
-        'safe' : {'bg':'#58f931', 'fc':'black'},
-        'neutral' : {'bg':'#FFEB51', 'fc':'black'},
-        'danger' : {'bg':'##ff2e1b', 'fc':'white'}
+        'missing' : {'numeric':None, 'bg':'gray', 'fc':'black'},
+        'not_applicable' : {'numeric':None, 'bg':'white', 'fc':'black'},
+        'safe' : {'numeric':0, 'bg':'#58f931', 'fc':'black'},
+        'neutral' : {'numeric':0.5, 'bg':'#FFEB51', 'fc':'black'},
+        'danger' : {'numeric':1.0, 'bg':'##ff2e1b', 'fc':'white'}
     }
 
     def convert_to_output_type(self, type, val):
         """..."""
-        pass
+        if type == 'xlsx':
+            rslt = f"background-color:{self.config[val]['bg']}; color:{self.config[val]['fc']}"
+        elif type == 'html':
+            rslt = self.config[val]['numeric']
+        return rslt
+
 
     def prepare_for_report(self, row):
         pass
-
-
 
     def highlight_cells(self, row):
         """This is actually used with `.apply()`
@@ -79,21 +82,11 @@ class HeatMapFormat:
     def col_Q1(self, val):
         """TODO"""
         if pd.isna(val):
-            return 'missing'
-        val = str(val).lower()
-        if 'no' in val:
-            return 'danger'
+            rslt = 'missing'
         else:
-            return 'not_applicable'
-
-    '''
-    def col_Q1(self, val):
-        """TODO"""
-        if pd.isna(val):
-            return f"background-color:{self.config['missing']['bg']}; color:{self.config['missing']['fc']}"
-        val = str(val).lower()
-        if 'no' in val:
-            return f"background-color: {self.config['danger']['bg']}; color: {self.config['danger']['fc']}"
-        else:
-            return f"background-color: {self.config['not_applicable']['bg']}; color: {self.config['not_applicable']['fc']}"
-    '''
+            val = str(val).lower()
+            if 'no' in val:
+                rslt = 'danger'
+            else:
+                rslt = 'not_applicable'
+        return rslt
