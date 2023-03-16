@@ -43,11 +43,11 @@ def create_excel_report(df, hmformat, writer):
                                         engine='openpyxl'
                                         )
 
-def create_index_report(output_dir, docs):
+def create_index_report(output_dir, data):
     """Generate d3 html index file from template."""
-    template_path = './doc_extract/templates'
+    template_path = './heatmap/templates'
     template = 'index.html'
-    template_data = {'records': docs}
+    template_data = {'data': data.to_dict('records')}    #data.to_json(orient='records')}
     output_filepath = output_dir / template
 
     report = Report(template_path)
@@ -59,22 +59,42 @@ def create_index_report(output_dir, docs):
 def main(args):
     """ Main entry point of the app """
     input_file = Path(args.input_file)
+    output_dir = Path(args.output_dir)
     df = read_data(input_file)
     hmformat = HeatMapFormat()
     match args.output_type:
         case 'xlsx':
-            output_file = args.output_dir
-            writer = pd.ExcelWriter(args.output_file, engine='xlsxwriter')
+            output_file = output_dir / 'file.xlsx'
+            writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
             create_excel_report(df, hmformat, writer)
         case 'html':
-            hmformat.XXXX
-            row_sums = df.sum(axis=0)
+            df_num = pd.DataFrame(
+                df.apply(func=hmformat.highlight_cells, 
+                         axis=1, 
+                         output_type='html'
+                         ).to_list()
+                )
+            row_sums = df_num.sum(axis=1, skipna=True)
+            scaled_row_sums = row_sums / row_sums.max()
             idx_for_sums_column = df.columns.to_list().index('Q1')
-            df.insert(idx_for_sums_column, 'Row_sums', row_sums)
+            df_orig = df.copy(deep=True)
             
-            df.set_index('Name', inplace=True)
-            df_long = df.melt(ignore_index=False).reset_index()
-            create_index_report(args.output_dir, docs)
+            df_num.insert(idx_for_sums_column, 'RowSums', scaled_row_sums)
+            df_num = pd.concat([pd.DataFrame(df['Name']), df_num.iloc[:,idx_for_sums_column:]], axis=1)
+            df_num.sort_values(by='RowSums', inplace=True, ascending=False)
+            df_num.set_index('Name', inplace=True)
+            df_num_long = df_num.melt(ignore_index=False).reset_index()
+            df_num_long.rename(columns={'Name':'NameNum','variable':'VarNum'}, inplace=True)
+
+            df_orig.insert(idx_for_sums_column, 'RowSums', scaled_row_sums)
+            df_orig.sort_values(by='RowSums', inplace=True, ascending=False)
+            df_orig.set_index('Name', inplace=True)
+            df_orig_long = df_orig.melt(ignore_index=False).reset_index()
+            df_orig_long.rename(columns={'variable':'Question','value':'text'}, inplace=True)
+
+            df_long = pd.concat([df_orig_long, df_num_long], axis=1)
+            df_long.drop(columns=['NameNum','VarNum'], inplace=True)
+            create_index_report(output_dir=output_dir, data=df_long)
 
 
 if __name__ == "__main__":

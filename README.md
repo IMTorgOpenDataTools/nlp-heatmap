@@ -8,6 +8,9 @@ Create a D3js heatmap from textual data for reporting.
 TODO
 
 
+![heatmap](/docs/heatmap.png 'Classification Heatmap')
+
+
 
 ## Tests
 

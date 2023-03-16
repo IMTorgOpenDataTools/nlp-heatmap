@@ -52,7 +52,7 @@ class HeatMapFormat:
             print('ERRROR')
         return status_category
 
-    def convert_to_output_type(self, type, status):
+    def convert_to_output_type(self, output_type, status):
         """Get the approprite output for the user-provided output_type."""
         if status['status_category']:
             val = status['status_category']
@@ -60,7 +60,7 @@ class HeatMapFormat:
             val = self.get_status_category_from_numeric(self, status['status_numeric'])
         else:
             print('ERROR')
-        match type:
+        match output_type:
             case 'xlsx':
                 rslt = f"background-color:{self.config[val]['bg']}; color:{self.config[val]['fc']}"
             case 'html':
@@ -70,13 +70,14 @@ class HeatMapFormat:
         return rslt
 
     #workflow
-    def highlight_cells(self, row):
+    def highlight_cells(self, row, output_type):
         """This is actually used with `.apply()`
         
         Each case refers to a column (question responses) that should be 
         mapped to a numeric value.
         """
-        formats = []
+        if output_type=='xlsx': formats = []
+        elif output_type=='html': formats = {}
         for key,val in zip(row.index, row):
             status = {'status_category':None, 'status_numeric':None}
             if pd.isna(val):
@@ -87,8 +88,12 @@ class HeatMapFormat:
                     case 'Q1': status['status_category'] = self.col_Q1(val)
                     case 'Q2': status['status_category'] = self.col_Q1(val)
                     case 'Q3': status['status_category'] = self.col_Q1(val)
-            rslt = self.convert_to_output_type(type='xlsx', val=status)
-            formats.append(rslt)
+            rslt = self.convert_to_output_type(output_type=output_type, status=status)
+            if output_type=='xlsx': 
+                formats.append(rslt)
+            elif output_type=='html':
+                new_key = key+'num'
+                formats[new_key] = rslt
         return formats
 
     def col_empty(self, val,):
@@ -108,5 +113,5 @@ class HeatMapFormat:
         if 'no' in val:
             status_category  = 'danger'
         else:
-            status_category  = 'not_applicable'
+            status_category  = 'safe'
         return status_category 
