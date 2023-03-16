@@ -52,9 +52,6 @@ class HeatMapFormat:
         return rslt
 
 
-    def prepare_for_report(self, row):
-        pass
-
     def highlight_cells(self, row):
         """This is actually used with `.apply()`
         
