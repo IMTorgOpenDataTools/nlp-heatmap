@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 Module for Status Heatmap Project.
+
+Class:
+    HeatMapFormat
 """
 
 __author__ = "Jason Beach"
@@ -13,7 +16,8 @@ import numpy as np
 
 
 class HeatMapFormat:
-    """Heatmap formatting based on conditions for each individual question.
+    """Formatting for heatmap output based on conditions for each
+    individual question.
 
     Usage:
     >>> import heatmap_format as hf
@@ -28,6 +32,13 @@ class HeatMapFormat:
     """
 
     def __init__(self, config=None):
+        """Create an object of type HeatMapFormat.  Depends on 
+        configuration data.
+        
+        :param config(dict) - contains mapping of question values to 
+        category's numeric value with colors
+        :return None
+        """
         if config:
             self.config = config
 
@@ -44,6 +55,11 @@ class HeatMapFormat:
 
     #support methods
     def get_status_category_from_numeric(self, numeric):
+        """Covert the numeric value to the config's status category.
+
+        :param numeric(float) - numeric value matched to config's numeric
+        :return status_category(str) - key value in config
+        """
         if 0 <= numeric <= 1.0:
             status_pairs = [(v['numeric'],k) for k,v in self.config.items() if v['numeric']!=None]
             pair = [p for p in status_pairs if p[0]>=numeric][0]
@@ -71,19 +87,30 @@ class HeatMapFormat:
 
     #workflow
     def highlight_cells(self, row, output_type):
-        """This is actually used with `.apply()`
-        
+        """This function implements question to model mapping for each row of
+        a DF.
+
+        :param output_type(str) - <'xlsx','html'>
+        :return formats - list of dict depending on output_type
+
+        Usage::
+            >>> df_num = pd.DataFrame(
+                    df.apply(func=hmformat.highlight_cells, 
+                         axis=1, 
+                         output_type='html'
+                         ).to_list()
+                )
         Each case refers to a column (question responses) that should be 
         mapped to a numeric value.
         """
         if output_type=='xlsx': formats = []
         elif output_type=='html': formats = {}
-        for key,val in zip(row.index, row):
+        for col,val in zip(row.index, row):
             status = {'status_category':None, 'status_numeric':None}
             if pd.isna(val):
                 status['status_category'] = 'missing'
             else:
-                match key:
+                match col:
                     case 'Name': status['status_category'] = self.col_empty(val)
                     case 'Q1': status['status_category'] = self.col_Q1(val)
                     case 'Q2': status['status_category'] = self.col_Q1(val)
@@ -92,7 +119,7 @@ class HeatMapFormat:
             if output_type=='xlsx': 
                 formats.append(rslt)
             elif output_type=='html':
-                new_key = key+'num'
+                new_key = col+'num'
                 formats[new_key] = rslt
         return formats
 
@@ -102,8 +129,7 @@ class HeatMapFormat:
         return status_category 
 
     #column mapping definitions
-    """
-    Column mapping requirements, may provide:
+    """Column mapping requirements, may provide:
     * 'status_category' <any except missing> for t-shirt size status, or
     * 'status_numeric' <float between 0.0 and 1.0> for use with d3js template
 

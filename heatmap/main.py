@@ -21,7 +21,11 @@ from pathlib import Path
 
 
 def read_data(input_file):
-    """Import data to dataframe."""
+    """Import data to dataframe.
+    
+    :param input_file(str) - path to input file
+    :return df(pd.DataFrame) - df of input data
+    """
     if input_file.suffix == '.csv':
         df = pd.read_csv(input_file)
     elif input_file.suffix == '.xlsx':
@@ -35,16 +39,31 @@ def read_data(input_file):
     return df
 
 def create_excel_report(df, hmformat, writer):
-    """Generate heatmap formatted excel file."""
+    """Generate heatmap formatted excel file.
+    
+    :param df(pd.DataFrame) - df of input data
+    :param hmformat(HeatMapFormat) - class for conditional formatting
+    :param writer(pd.ExcelWriter) - excel writer class for output
+
+    :return completed(bool) - whether function compeleted, correctly
+    """
     df.style.apply(hmformat.highlight_cells,
                             axis=1
                             ).to_excel(writer,
                                         sheet_name='Heatmap',
                                         engine='openpyxl'
                                         )
+    completed = True
+    return completed
 
 def create_index_report(output_dir, data):
-    """Generate d3 html index file from template."""
+    """Generate d3 html index file from template.
+    
+    :param output_dir(str) - filepath to output index.html
+    :param data(pd.DataFrame) - df in long format 
+
+    :return completed(bool) - whether function compeleted, correctly
+    """
     template_path = './heatmap/templates'
     template = 'index.html'
     template_data = {'data': data.to_dict('records')}    #data.to_json(orient='records')}
@@ -55,6 +74,9 @@ def create_index_report(output_dir, data):
                                 template_args=template_data
                                 )
     report.save_report(html, filepath=output_filepath)
+    completed = True
+    return completed
+
 
 def main(args):
     """ Main entry point of the app """

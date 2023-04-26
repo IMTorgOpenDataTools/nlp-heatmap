@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Report class
+Module for creating HTML report by combining template with data.
+
+Classes:
+    Report
 """
 
 __author__ = "Jason Beach"
@@ -14,12 +17,23 @@ from pathlib import Path
 
 
 class Report:
-    """TODO
+    """Class for creating and saving reports in HTML format from
+    combining a template with data.
     
-    output_path: "./tests/output/my_new_file.html"
+    Usage::
+    >>> report = Report(template_path)
+    >>> html = report.create_report(template=template, 
+                                template_args=template_data
+                                )
+    >>> report.save_report(html, filepath=output_filepath)
     """
 
     def __init__(self, template_path):
+        """Create class.
+
+        :param output_path - "./tests/output/my_new_file.html"
+        :return None
+        """
         template_path = Path(template_path)
         if template_path.is_dir():
             self.template_path = template_path

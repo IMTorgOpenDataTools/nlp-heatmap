@@ -30,14 +30,34 @@ Open the d3 template (`heatmap/templates/index.html`) in the browser.  If the th
 
 ## ToDo
 
-* config file for settings
-* models config for question-model mapping
-* enable different response types
-  - numeric
-  - binary
-  - likert
-  - ordered categories
-  - unstructured text
+* config file for settings and model mapping
+```config.yml
+setting:
+  option1: feature
+  index_columns: [1,2,3]
+  columns_to_add: [summary1, summary2]
+
+questions:
+  q1: model1
+  q2:
+    - model2
+    - model3
+  q3: model4
+  summary1: model5
+  summary2: model6
+```
+* q* should contain:
+  - input data type
+  - model mapping
+  - color mapping
+
+* create models.py for generic model classes
+* models_mapped.py for implemented models subclassed from models.py
+* provide models for different question response types
+  - ~~numeric~~ q4
+  - ~~binary~~ q5
+  - ~~likert, ordered categories~~ q6
+  - ~~unstructured text~~ q1,q2,q3
 * frontend functions
   - sort
   - export table to excel
