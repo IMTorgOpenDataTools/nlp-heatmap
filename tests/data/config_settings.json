@@ -1,0 +1,7 @@
+{
+    "missing" : {"numeric":null, "bg":"gray", "fc":"black"},
+    "not_applicable" : {"numeric":null, "bg":"white", "fc":"black"},
+    "safe" : {"numeric":0, "bg":"#58f931", "fc":"black"},
+    "neutral" : {"numeric":0.5, "bg":"#FFEB51", "fc":"black"},
+    "danger" : {"numeric":1.0, "bg":"##ff2e1b", "fc":"white"}
+}

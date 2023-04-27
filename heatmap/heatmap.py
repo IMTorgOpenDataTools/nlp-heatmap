@@ -10,6 +10,7 @@ __author__ = "Jason Beach"
 __version__ = "0.1.0"
 __license__ = "MIT"
 
+from heatmap import models
 
 import pandas as pd
 import numpy as np
@@ -21,7 +22,10 @@ class HeatMapFormat:
 
     Usage:
     >>> import heatmap_format as hf
-    >>> hmformat = hf.HeatMapFormatting()
+    >>> config = models.Config(filepath=filepath)
+    >>> mapping = models.ModelMapping(filepath=filepath)
+    >>> config.load(); mapping.load()
+    >>> hmformat = hf.HeatMapFormatting(config, mapping)
     >>> writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
     >>> df.style.apply(hmformat.highlight_cells,
                         axis=1
@@ -31,7 +35,7 @@ class HeatMapFormat:
                                     )
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config, mapping):
         """Create an object of type HeatMapFormat.  Depends on 
         configuration data.
         
@@ -39,50 +43,44 @@ class HeatMapFormat:
         category's numeric value with colors
         :return None
         """
-        if config:
+        if type(config)==models.Config and type(mapping)==models.ModelMapping:
             self.config = config
+            self.mapping = mapping
 
     #config attrs
     output_types = ['xlsx', 'html']
 
-    config = {
-        'missing' : {'numeric':None, 'bg':'gray', 'fc':'black'},
-        'not_applicable' : {'numeric':None, 'bg':'white', 'fc':'black'},
-        'safe' : {'numeric':0, 'bg':'#58f931', 'fc':'black'},
-        'neutral' : {'numeric':0.5, 'bg':'#FFEB51', 'fc':'black'},
-        'danger' : {'numeric':1.0, 'bg':'##ff2e1b', 'fc':'white'}
-    }
 
     #support methods
     def get_status_category_from_numeric(self, numeric):
         """Covert the numeric value to the config's status category.
 
-        :param numeric(float) - numeric value matched to config's numeric
+        :param numeric(float) - numeric value matched to config settings's numeric
         :return status_category(str) - key value in config
         """
         if 0 <= numeric <= 1.0:
-            status_pairs = [(v['numeric'],k) for k,v in self.config.items() if v['numeric']!=None]
+            status_pairs = [(v['numeric'],k) for k,v in self.config.categories.items() if v['numeric']!=None]
             pair = [p for p in status_pairs if p[0]>=numeric][0]
             status_category = pair[1]
         else:
-            print('ERRROR')
+            raise TypeError
         return status_category
 
     def convert_to_output_type(self, output_type, status):
         """Get the approprite output for the user-provided output_type."""
         if status['status_category']:
             val = status['status_category']
-        elif status['status_numeric']:
-            val = self.get_status_category_from_numeric(self, status['status_numeric'])
+        elif status['status_numeric']>=0:
+            val = self.get_status_category_from_numeric(status['status_numeric'])
         else:
-            print('ERROR')
+            raise TypeError
         match output_type:
             case 'xlsx':
-                rslt = f"background-color:{self.config[val]['bg']}; color:{self.config[val]['fc']}"
+                rslt = f"background-color:{self.config.categories[val]['bg']}; color:{self.config.categories[val]['fc']}"
             case 'html':
-                rslt = self.config[val]['numeric']
+                rslt = self.config.categories[val]['numeric']
             case _:
-                print('ERROR')
+                raise TypeError
         return rslt
 
     #workflow
@@ -110,11 +108,10 @@ class HeatMapFormat:
             if pd.isna(val):
                 status['status_category'] = 'missing'
             else:
-                match col:
-                    case 'Name': status['status_category'] = self.col_empty(val)
-                    case 'Q1': status['status_category'] = self.col_Q1(val)
-                    case 'Q2': status['status_category'] = self.col_Q1(val)
-                    case 'Q3': status['status_category'] = self.col_Q1(val)
+                mdl_class = self.mapping.data[col]
+                mdl = mdl_class(input_type=type(val),model_mapping='')
+                k,v = mdl.run(val)
+                status[k] = v
             rslt = self.convert_to_output_type(output_type=output_type, status=status)
             if output_type=='xlsx': 
                 formats.append(rslt)
@@ -122,22 +119,3 @@ class HeatMapFormat:
                 new_key = col+'num'
                 formats[new_key] = rslt
         return formats
-
-    def col_empty(self, val,):
-        """Defined for empty columns"""
-        status_category = 'not_applicable'
-        return status_category 
-
-    #column mapping definitions
-    """Column mapping requirements, may provide:
-    * 'status_category' <any except missing> for t-shirt size status, or
-    * 'status_numeric' <float between 0.0 and 1.0> for use with d3js template
-
-    """
-    def col_Q1(self, val):
-        val = str(val).lower()
-        if 'no' in val:
-            status_category  = 'danger'
-        else:
-            status_category  = 'safe'
-        return status_category 

@@ -8,6 +8,7 @@ pytest = "*"
 pandas = "*"
 jinja2 = "*"
 openpyxl = "*"
+pyyaml = "*"
 
 [dev-packages]
 

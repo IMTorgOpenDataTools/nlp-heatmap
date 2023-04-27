@@ -51,9 +51,9 @@ questions:
   - model mapping
   - color mapping
 
-* create models.py for generic model classes
-* models_mapped.py for implemented models subclassed from models.py
-* provide models for different question response types
+* ~~create models.py for generic model classes~~
+* ~~models_mapped.py for implemented models subclassed from models.py~~
+* ~~provide models for different question response types~~
   - ~~numeric~~ q4
   - ~~binary~~ q5
   - ~~likert, ordered categories~~ q6

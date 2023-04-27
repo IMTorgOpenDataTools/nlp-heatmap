@@ -12,6 +12,7 @@ __license__ = "MIT"
 
 
 from heatmap.heatmap import HeatMapFormat
+import models
 from report import Report
 
 import pandas as pd
@@ -83,7 +84,11 @@ def main(args):
     input_file = Path(args.input_file)
     output_dir = Path(args.output_dir)
     df = read_data(input_file)
-    hmformat = HeatMapFormat()
+
+    config = models.Config(filepath='./heatmap/config_settings.json')
+    mapping = models.ModelMapping(filepath='./heatmap/config_mapping.yml')
+    test, test = config.load(), mapping.load()
+    hmformat = HeatMapFormat(config, mapping)
     match args.output_type:
         case 'xlsx':
             output_file = output_dir / 'file.xlsx'
