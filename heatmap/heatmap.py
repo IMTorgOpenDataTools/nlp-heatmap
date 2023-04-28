@@ -11,6 +11,7 @@ __version__ = "0.1.0"
 __license__ = "MIT"
 
 from heatmap import models
+from heatmap.models import Config
 
 import pandas as pd
 import numpy as np
@@ -43,9 +44,11 @@ class HeatMapFormat:
         category's numeric value with colors
         :return None
         """
-        if type(config)==models.Config and type(mapping)==models.ModelMapping:
+        if type(config).__name__=='Config' and type(mapping).__name__=='ModelMapping':
             self.config = config
             self.mapping = mapping
+        else:
+            raise TypeError
 
     #config attrs
     output_types = ['xlsx', 'html']

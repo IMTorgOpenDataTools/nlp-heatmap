@@ -88,7 +88,7 @@ def main(args):
     config = models.Config(filepath='./heatmap/config_settings.json')
     mapping = models.ModelMapping(filepath='./heatmap/config_mapping.yml')
     test, test = config.load(), mapping.load()
-    hmformat = HeatMapFormat(config, mapping)
+    hmformat = HeatMapFormat(config=config, mapping=mapping)
     match args.output_type:
         case 'xlsx':
             output_file = output_dir / 'file.xlsx'

@@ -10,8 +10,17 @@ Create an interactive heatmap from tabular data for reporting.  Typical usage is
 Ensure the following:
 
 * survey data is in the correct file format
-* TODO: config file
-* TODO: ques-model mapping
+  - each row (record) and question (column)
+  - for example, see: `./tests/data/survey.csv`
+* modify config settings file: `heatmap/config_settings.json` (default in `./tests/data/`)
+  - this determines the output formatting
+  - there are a default of five categories: two for null values and three for typical stop-light (red, amber, green) formatting
+  - each top-level key is a category that will be assigned the associated numeric value and cell formatting
+  - if the data type of a column is numeric, then it will be chosen by the numeric value, not by the category
+* modify config model mapping file: `heatmap/config_mapping.yml` (default in `./tests/data/`)
+  - this maps questions / columns to models (`./heatmap/models.py`) that transform them to categories
+  - several generic models exist, but custom class models may need to be defined to reach expected output display
+* custom models, if applicable, defined in `./heatmap/models.py`
 
 Run this: (remove optional --arg names)
 ```
@@ -25,13 +34,21 @@ python --input_file ./tests/data/survey.csv --output_dir ./tests/output/ --outpu
 
 ## Tests
 
-Open the d3 template (`heatmap/templates/index.html`) in the browser.  If the the data does not load, then you may have a CORS issue with the browser.  Verify this through the console.  Steps to fix the issue for FireFox, [here](https://stackoverflow.com/questions/51081754/cross-origin-request-blocked-when-loading-local-file).
+Testing is performed using pytest.
+
+```shell
+pytest --collect-only
+pytest
+```
+
+To view created index file, open the d3 template (`heatmap/templates/index.html`) in the browser.  If the the data does not load, then you may have a CORS issue with the browser.  Verify this through the console.  Steps to fix the issue for FireFox, [here](https://stackoverflow.com/questions/51081754/cross-origin-request-blocked-when-loading-local-file).
+
 
 
 ## ToDo
 
-* config file for settings and model mapping
-```config.yml
+* additional options for model mapping
+```config_mapping.yml
 setting:
   option1: feature
   index_columns: [1,2,3]
@@ -46,18 +63,7 @@ questions:
   summary1: model5
   summary2: model6
 ```
-* q* should contain:
-  - input data type
-  - model mapping
-  - color mapping
-
-* ~~create models.py for generic model classes~~
-* ~~models_mapped.py for implemented models subclassed from models.py~~
-* ~~provide models for different question response types~~
-  - ~~numeric~~ q4
-  - ~~binary~~ q5
-  - ~~likert, ordered categories~~ q6
-  - ~~unstructured text~~ q1,q2,q3
 * frontend functions
-  - sort
-  - export table to excel
+  - improve color configuration, [ref](https://observablehq.com/@lemonnish/color-scale-using-multiple-colors)
+  - sort columns, [ref](https://github.com/michael-oppermann/d3-learning-material/tree/main/d3-case-studies/d3-case-study_measles-and-vaccines)
+  - export table to excel, [ref](https://github.com/gitbrent/xlsx-js-style) [ref](https://github.com/sharonchoong/svg-exportJS)

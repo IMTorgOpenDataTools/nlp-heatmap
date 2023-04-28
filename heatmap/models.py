@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-All model definitions to be applied to questions in survey.
+All model definitions to be applied to questions in survey through `./heatmap/config_mapping.yml`
 
 Column-model mapping requirements must adhere to `config_settings.json`,to include:
 * 'status_category' <any except missing> for t-shirt size status, or
